@@ -1,0 +1,3 @@
+placeholderedKey: ${placeholderOverride2@placeholderedKey}
+simpleKey: ${placeholderOverride2@simpleKey}
+v: 1
