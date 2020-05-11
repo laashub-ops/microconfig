@@ -50,7 +50,7 @@ public class MicroconfigTest {
     }
 
     private boolean overriddenTest(File file) {
-        String testName = System.getProperty("testName");
+        String testName = System.getProperty("test");
         return testName == null || file.getParentFile().getName().equals(testName);
     }
 
