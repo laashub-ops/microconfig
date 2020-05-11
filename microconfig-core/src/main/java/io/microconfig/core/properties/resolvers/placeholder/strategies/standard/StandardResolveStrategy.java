@@ -32,17 +32,21 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
                                                         DeclaringComponent sourceOfValue,
                                                         DeclaringComponent root,
                                                         Set<Placeholder> visited) {
-        if (!p.isSelfReferenced() && !p.referencedTo(sourceOfValue)) {
-            return Stream.of(p.getReferencedComponent(""));
+        if (canBeOverridden(p, sourceOfValue)) {
+            return of(
+                    of(root),
+                    visited.stream().map(v -> v.getReferencedComponent("this")), //todo
+                    of(sourceOfValue)
+            ).flatMap(Function.identity())
+                    .map(DeclaringComponentImpl::copyOf)//for correct distinct
+                    .distinct();
         }
 
-        return of(
-                of(root),
-                visited.stream().map(v -> v.getReferencedComponent("this")), //todo
-                of(sourceOfValue)
-        ).flatMap(Function.identity())
-                .map(DeclaringComponentImpl::copyOf)//for correct distinct
-                .distinct();
+        return of(p.getReferencedComponent(""));
+    }
+
+    private boolean canBeOverridden(Placeholder p, DeclaringComponent sourceOfValue) {
+        return p.isSelfReferenced() || !p.referencedTo(sourceOfValue);
     }
 
     private Optional<Property> doResolve(DeclaringComponent c, String key) {

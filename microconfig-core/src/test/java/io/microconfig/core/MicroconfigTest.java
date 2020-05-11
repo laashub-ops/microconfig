@@ -45,8 +45,13 @@ public class MicroconfigTest {
 
     private boolean isExpectation(File file) {
         String name = file.getName();
-        return //file.getParentFile().getName().equals("placeholderToMap") &&
+        return overriddenTest(file) &&
                 (name.startsWith("expect.") || name.startsWith("truncate.") || name.startsWith("exception."));
+    }
+
+    private boolean overriddenTest(File file) {
+        String testName = System.getProperty("testName");
+        return testName == null || file.getParentFile().getName().equals(testName);
     }
 
     private DynamicTest toTest(File expectation) {
