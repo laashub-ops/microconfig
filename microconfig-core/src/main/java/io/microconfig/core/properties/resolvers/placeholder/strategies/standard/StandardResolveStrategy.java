@@ -22,7 +22,7 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
                                       DeclaringComponent root,
                                       Set<Placeholder> visited) {
         return overridePriority(p, sourceOfValue, root, visited)
-                .map(c -> doResolve(p.withReferencedComponent(c)))
+                .map(c -> doResolve(p, c))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
@@ -45,8 +45,8 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
         return of(p.getReferencedComponent(""));
     }
 
-    private Optional<Property> doResolve(Placeholder p) {
-        DeclaringComponent component = p.getReferencedComponent("");
+    private Optional<Property> doResolve(Placeholder p, DeclaringComponent c) {
+        DeclaringComponent component = p.withReferencedComponent(c).getReferencedComponent("");
         return environmentRepository.getOrCreateByName(component.getEnvironment())
                 .findComponentWithName(component.getComponent())
                 .getPropertiesFor(configTypeWithName(component.getConfigType()))
