@@ -57,7 +57,7 @@ public class PlaceholderResolver implements RecursiveResolver {
 
         private PlaceholderResolver currentResolverWithVisited(Placeholder placeholder) {
             Set<Placeholder> updated = new LinkedHashSet<>(visited);
-            if (updated.add(placeholder)) {
+            if (updated.add(placeholder)) { //todo override placeholder component in case of this?
                 return withVisited(unmodifiableSet(updated));
             }
 

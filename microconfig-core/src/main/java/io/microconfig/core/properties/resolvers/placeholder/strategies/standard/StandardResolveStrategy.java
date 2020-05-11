@@ -2,10 +2,8 @@ package io.microconfig.core.properties.resolvers.placeholder.strategies.standard
 
 import io.microconfig.core.environments.EnvironmentRepository;
 import io.microconfig.core.properties.*;
-import io.microconfig.core.properties.resolvers.placeholder.PlaceholderImpl;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -18,41 +16,26 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
     private final EnvironmentRepository environmentRepository;
 
     @Override
-    public Optional<Property> resolve(Placeholder placeholder,
+    public Optional<Property> resolve(Placeholder p,
                                       DeclaringComponent sourceOfValue,
                                       DeclaringComponent root,
                                       Set<Placeholder> visited) {
-        DeclaringComponent component = placeholder.getReferencedComponent(root.getComponent());
-        return environmentRepository.getOrCreateByName(component.getEnvironment())
-                .getOrCreateComponentWithName(component.getComponent())
-                .getPropertiesFor(configTypeWithName(component.getConfigType()))
-                .getPropertyWithKey(placeholder.getKey());
+        return of(
+                of(root),
+                visited.stream().map(v -> v.getReferencedComponent("this")), //todo
+                of(sourceOfValue)
+        ).flatMap(identity())
+                .map(DeclaringComponentImpl::copyOf).distinct()//for correct distinct
+                .map(c -> doResolve(c.getComponent(), p.getKey(), c.getEnvironment(), c.getConfigType())) //in some cases can't be override
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst();
     }
 
-//    private boolean canBeOverridden(PlaceholderImpl p, DeclaringComponent sourceOfValue) {
-//        return p.isSelfReferenced() ||
-//                (p.referencedTo(sourceOfValue) && !nonOverridableKeys.contains(p.getKey()));
-//    }
-//
-//    private String overrideByParents(PlaceholderImpl p, DeclaringComponent sourceOfValue, DeclaringComponent root) {
-//        return
-//                Function < DeclaringComponent,String > tryResolveFor = override -> {
-//            try {
-//                return resolve(p.overrideBy(override), root);
-//            } catch (RuntimeException e) {
-//                return null;
-//            }
-//        };
-//
-//        return of(
-//                of(root),
-//                visited.stream().map(PlaceholderImpl::getReferencedComponent),
-//                of(sourceOfValue)
-//        ).flatMap(identity())
-//                .map(DeclaringComponentImpl::copyOf).distinct()//for correct distinct
-//                .map(tryResolveFor)
-//                .filter(Objects::nonNull)
-//                .findFirst()
-//                .orElseThrow(() -> new ResolveException(sourceOfValue, root, "Can't resolve placeholder " + this));
-//    }
+    private Optional<Property> doResolve(String component, String key, String environment, String configType) {
+        return environmentRepository.getOrCreateByName(environment)
+                .getOrCreateComponentWithName(component)
+                .getPropertiesFor(configTypeWithName(configType))
+                .getPropertyWithKey(key);
+    }
 }
