@@ -35,7 +35,7 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
         if (p.isSelfReferenced(sourceOfValue)) {
             return of(
                     of(root),
-                    visited.stream().map(v -> v.getReferencedComponent("this")), //todo
+                    visited.stream().map(pl -> pl.getReferencedComponent("")),
                     of(sourceOfValue)
             ).flatMap(Function.identity())
                     .map(DeclaringComponentImpl::copyOf)//for correct distinct
