@@ -19,7 +19,7 @@ public class ComponentProperties {
     private final File rootDir;
     private final File destinationComponentDir;
 
-    public Map<String, ComponentProperty> get() {
+    public Map<String, ComponentProperty> properties() {
         return of(
                 new NameProperty(),
                 new ConfigDirProperty(componentGraph, environmentRepository),

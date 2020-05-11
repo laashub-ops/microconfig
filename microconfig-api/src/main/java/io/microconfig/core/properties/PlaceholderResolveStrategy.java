@@ -1,7 +1,11 @@
 package io.microconfig.core.properties;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface PlaceholderResolveStrategy {
-    Optional<Property> resolve(String component, String key, String environment, String configType);
+    Optional<Property> resolve(Placeholder placeholder,
+                               DeclaringComponent sourceOfValue,
+                               DeclaringComponent root,
+                               Set<Placeholder> visited);
 }

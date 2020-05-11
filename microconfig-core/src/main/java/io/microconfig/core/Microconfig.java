@@ -16,10 +16,8 @@ import io.microconfig.core.properties.repository.FilePropertiesRepository;
 import io.microconfig.core.properties.resolvers.RecursiveResolver;
 import io.microconfig.core.properties.resolvers.expression.ExpressionResolver;
 import io.microconfig.core.properties.resolvers.placeholder.PlaceholderResolver;
-import io.microconfig.core.properties.resolvers.placeholder.strategies.component.ComponentProperty;
 import io.microconfig.core.properties.resolvers.placeholder.strategies.component.ComponentResolveStrategy;
 import io.microconfig.core.properties.resolvers.placeholder.strategies.component.properties.ComponentProperties;
-import io.microconfig.core.properties.resolvers.placeholder.strategies.environment.EnvProperty;
 import io.microconfig.core.properties.resolvers.placeholder.strategies.environment.EnvironmentResolveStrategy;
 import io.microconfig.core.properties.resolvers.placeholder.strategies.environment.properties.EnvironmentProperties;
 import io.microconfig.core.properties.resolvers.placeholder.strategies.standard.StandardResolveStrategy;
@@ -32,7 +30,6 @@ import lombok.experimental.Accessors;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import static io.microconfig.core.configtypes.CompositeConfigTypeRepository.composite;
 import static io.microconfig.core.configtypes.CustomConfigTypeRepository.findDescriptorIn;
@@ -44,7 +41,6 @@ import static io.microconfig.core.properties.resolvers.placeholder.strategies.sy
 import static io.microconfig.core.properties.resolvers.placeholder.strategies.system.SystemResolveStrategy.systemPropertiesResolveStrategy;
 import static io.microconfig.utils.CacheProxy.cache;
 import static io.microconfig.utils.CollectionUtils.join;
-import static io.microconfig.utils.CollectionUtils.joinToSet;
 import static io.microconfig.utils.FileUtils.canonical;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -132,24 +128,18 @@ public class Microconfig {
         }
 
         private RecursiveResolver initPlaceholderResolver() {
-            Map<String, ComponentProperty> componentSpecialProperties = new ComponentProperties(componentGraph(), environments(), rootDir, destinationDir).get();
-            Map<String, EnvProperty> envSpecialProperties = new EnvironmentProperties().get();
-
-            PlaceholderResolveStrategy strategy = cache(composite(join(
+            return new PlaceholderResolver(cache(composite(join(
                     additionalPlaceholderResolvers,
                     asList(
                             systemPropertiesResolveStrategy(),
                             envVariablesResolveStrategy(),
-                            new ComponentResolveStrategy(componentSpecialProperties),
-                            new EnvironmentResolveStrategy(environments(), envSpecialProperties),
+                            new ComponentResolveStrategy(
+                                    new ComponentProperties(componentGraph(), environments(), rootDir, destinationDir).properties()
+                            ),
+                            new EnvironmentResolveStrategy(environments(), new EnvironmentProperties().properties()),
                             new StandardResolveStrategy(environments())
                     )
-            )));
-
-            return new PlaceholderResolver(
-                    strategy,
-                    joinToSet(componentSpecialProperties.keySet(), envSpecialProperties.keySet())
-            );
+            ))));
         }
 
         private ConfigTypeRepository initConfigTypeRepository() {

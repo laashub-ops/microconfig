@@ -1,12 +1,11 @@
 package io.microconfig.core.properties.resolvers.placeholder.strategies.system;
 
-import io.microconfig.core.properties.DeclaringComponentImpl;
-import io.microconfig.core.properties.PlaceholderResolveStrategy;
-import io.microconfig.core.properties.Property;
+import io.microconfig.core.properties.*;
 import io.microconfig.utils.Os;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import static io.microconfig.core.properties.ConfigFormat.PROPERTIES;
@@ -33,16 +32,19 @@ public class SystemResolveStrategy implements PlaceholderResolveStrategy {
     }
 
     @Override
-    public Optional<Property> resolve(String component, String key, String environment, String configType) {
-        if (!type.equals(component)) return empty();
+    public Optional<Property> resolve(Placeholder placeholder,
+                                      DeclaringComponent sourceOfValue,
+                                      DeclaringComponent root, Set<Placeholder> visited) {
+        DeclaringComponent component = placeholder.getReferencedComponent(root.getComponent());
+        if (!type.equals(component.getComponent())) return empty();
 
-        return ofNullable(resolver.apply(key))
-                .map(v -> escapeOnWindows(v, key))
-                .map(v -> property(key, v, PROPERTIES, new DeclaringComponentImpl(configType, component, environment)));
+        return ofNullable(resolver.apply(placeholder.getKey()))
+                .map(v -> escapeOnWindows(v, placeholder.getKey()))
+                .map(v -> property(placeholder.getKey(), v, PROPERTIES, component));
     }
 
     private String escapeOnWindows(String value, String key) {
         if (!Os.isWindows()) return value;
-        return ("user.home".equals(key)) ? unixLikePath(value) : escape(value);
+        return "user.home".equals(key) ? unixLikePath(value) : escape(value);
     }
 }

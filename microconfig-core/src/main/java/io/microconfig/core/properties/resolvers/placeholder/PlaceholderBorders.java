@@ -1,5 +1,6 @@
 package io.microconfig.core.properties.resolvers.placeholder;
 
+import io.microconfig.core.properties.Placeholder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
@@ -155,7 +156,7 @@ public class PlaceholderBorders {
     }
 
     public Placeholder toPlaceholder(String contextConfigType, String contextEnv) {
-        return new Placeholder(
+        return new PlaceholderImpl(
                 getConfigType(contextConfigType),
                 getComponent(),
                 getEnvironment(contextEnv),

@@ -9,7 +9,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Stream.of;
 
 public class EnvironmentProperties {
-    public Map<String, EnvProperty> get() {
+    public Map<String, EnvProperty> properties() {
         return of(
                 new EnvNameProperty(),
                 new IpProperty(),
