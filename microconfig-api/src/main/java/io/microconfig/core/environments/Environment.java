@@ -22,7 +22,7 @@ public interface Environment {
 
     Component getComponentWithName(String componentName);
 
-    Components findComponentsFrom(List<String> groups, List<String> components);
+    Component findComponentWithName(String componentName);
 
-    Component getOrCreateComponentWithName(String componentName);
+    Components findComponentsFrom(List<String> groups, List<String> components);
 }

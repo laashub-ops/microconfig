@@ -29,7 +29,7 @@ class EnvironmentImplTest {
     ComponentFactory factory = mock(ComponentFactory.class);
     PropertiesFactory factory2 = mock(PropertiesFactory.class);
 
-    Environment env = new EnvironmentImpl(null,"dev", 1, groups, factory, factory2);
+    Environment env = new EnvironmentImpl(null, "dev", 1, groups, factory, factory2);
 
     @BeforeEach
     void setUp() {
@@ -83,11 +83,11 @@ class EnvironmentImplTest {
     @Test
     void getOrCreateComponentWithName() {
         when(group1.findComponentWithName("two")).thenReturn(of(two));
-        assertEquals(two, env.getOrCreateComponentWithName("two"));
+        assertEquals(two, env.findComponentWithName("two"));
 
         Component four = mock(Component.class);
         when(factory.createComponent("four", "four", env.getName())).thenReturn(four);
-        assertEquals(four, env.getOrCreateComponentWithName("four"));
+        assertEquals(four, env.findComponentWithName("four"));
     }
 
     @Test

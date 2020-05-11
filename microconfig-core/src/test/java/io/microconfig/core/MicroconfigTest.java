@@ -88,7 +88,7 @@ public class MicroconfigTest {
     private String build(String component, String env) {
         try {
             return microconfig.environments().getOrCreateByName(env)
-                    .getOrCreateComponentWithName(component)
+                    .findComponentWithName(component)
                     .getPropertiesFor(configType(APPLICATION))
                     .resolveBy(microconfig.resolver())
                     .first()

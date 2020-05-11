@@ -6,16 +6,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.With;
 
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
 import static io.microconfig.core.properties.resolvers.placeholder.PlaceholderBorders.findPlaceholderIn;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Stream.of;
 import static lombok.AccessLevel.PRIVATE;
 
 @RequiredArgsConstructor(access = PRIVATE)
@@ -39,15 +36,19 @@ public class PlaceholderResolver implements RecursiveResolver {
 
         @Override
         public String resolveFor(DeclaringComponent sourceOfValue, DeclaringComponent root) {
-            Placeholder placeholder = borders.toPlaceholder(sourceOfValue.getConfigType(), sourceOfValue.getEnvironment());
-            return resolve(placeholder, sourceOfValue, root);
+            try {
+                Placeholder placeholder = borders.toPlaceholder(sourceOfValue.getConfigType(), sourceOfValue.getEnvironment());
+                return resolve(placeholder, sourceOfValue, root);
+            } catch (RuntimeException e) {
+                throw new ResolveException(sourceOfValue, root, "Can't resolve " + this, e);
+            }
         }
 
         private String resolve(Placeholder p, DeclaringComponent sourceOfValue, DeclaringComponent root) {
             try {
                 Property resolved = strategy.resolve(p, sourceOfValue, root, visited)
                         .orElseThrow(() -> new ResolveException(sourceOfValue, root, "Can't resolve " + p));
-                return resolved.resolveBy(currentResolverWithVisited(p), root).getValue();
+                return resolved.resolveBy(currentResolverWithVisited(p, resolved), root).getValue();
             } catch (RuntimeException e) {
                 String defaultValue = p.getDefaultValue();
                 if (defaultValue != null) return defaultValue;
@@ -55,9 +56,9 @@ public class PlaceholderResolver implements RecursiveResolver {
             }
         }
 
-        private PlaceholderResolver currentResolverWithVisited(Placeholder placeholder) {
+        private PlaceholderResolver currentResolverWithVisited(Placeholder placeholder, Property resolved) {
             Set<Placeholder> updated = new LinkedHashSet<>(visited);
-            if (updated.add(placeholder)) { //todo override placeholder component in case of this?
+            if (updated.add(placeholder.withReferencedComponent(resolved.getDeclaringComponent()))) {
                 return withVisited(unmodifiableSet(updated));
             }
 

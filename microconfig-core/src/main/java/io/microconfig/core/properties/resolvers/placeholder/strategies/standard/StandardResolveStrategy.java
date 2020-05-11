@@ -22,7 +22,7 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
                                       DeclaringComponent root,
                                       Set<Placeholder> visited) {
         return overridePriority(p, sourceOfValue, root, visited)
-                .map(c -> doResolve(c, p.getKey())) //in some cases can't be override
+                .map(c -> doResolve(c, p)) //in some cases can't be override
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
@@ -32,7 +32,7 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
                                                         DeclaringComponent sourceOfValue,
                                                         DeclaringComponent root,
                                                         Set<Placeholder> visited) {
-        if (canBeOverridden(p, sourceOfValue)) {
+        if (p.isSelfReferenced(sourceOfValue)) {
             return of(
                     of(root),
                     visited.stream().map(v -> v.getReferencedComponent("this")), //todo
@@ -45,14 +45,10 @@ public class StandardResolveStrategy implements PlaceholderResolveStrategy {
         return of(p.getReferencedComponent(""));
     }
 
-    private boolean canBeOverridden(Placeholder p, DeclaringComponent sourceOfValue) {
-        return p.isSelfReferenced() || !p.referencedTo(sourceOfValue);
-    }
-
-    private Optional<Property> doResolve(DeclaringComponent c, String key) {
+    private Optional<Property> doResolve(DeclaringComponent c, Placeholder p) {
         return environmentRepository.getOrCreateByName(c.getEnvironment())
-                .getOrCreateComponentWithName(c.getComponent())
-                .getPropertiesFor(configTypeWithName(c.getConfigType()))
-                .getPropertyWithKey(key);
+                .findComponentWithName(c.getComponent())
+                .getPropertiesFor(configTypeWithName(p.getReferencedComponent("").getConfigType()))
+                .getPropertyWithKey(p.getKey());
     }
 }
