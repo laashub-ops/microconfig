@@ -1,4 +1,4 @@
-name: Publish to Maven Central Staging
+name: Publish to Maven Central
 
 on:
   push:
