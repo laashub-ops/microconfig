@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static io.microconfig.core.properties.ConfigFormat.PROPERTIES;
 import static io.microconfig.core.properties.PropertyImpl.property;
@@ -34,17 +35,19 @@ public class EnvironmentResolveStrategy implements PlaceholderResolveStrategy {
         if (envProperty == null) return empty();
 
         DeclaringComponent component = placeholder.getReferencedComponent(root.getComponent());
-        Environment environment = findEnv(placeholder, sourceOfValue, root, visited);
-        if (environment == null) return empty();
-
-        return envProperty.resolveFor(component.getComponent(), environment)
-                .map(value -> property(placeholder.getKey(), value, PROPERTIES, component));
+       Stream<Environment> environments = findEnv(placeholder, sourceOfValue, root, visited);
+       return environments.map(environment-> envProperty.resolveFor(component.getComponent(), environment))
+               .filter(Optional::isPresent)
+               .map(Optional::get)
+               .map(value -> property(placeholder.getKey(), value, PROPERTIES, component))
+               .findFirst();
     }
 
-    private Environment findEnv(Placeholder p,
-                                DeclaringComponent sourceOfValue,
-                                DeclaringComponent root,
-                                Set<Placeholder> visited) {
+    //-e cr-dev6 -s cr-atlas-cib-feed
+    private Stream<Environment> findEnv(Placeholder p,
+                                       DeclaringComponent sourceOfValue,
+                                       DeclaringComponent root,
+                                       Set<Placeholder> visited) {
         if (p.isSelfReferenced(sourceOfValue)) {
             return of(
                     of(root),
@@ -53,12 +56,11 @@ public class EnvironmentResolveStrategy implements PlaceholderResolveStrategy {
             ).flatMap(Function.identity())
                     .map(DeclaringComponent::getEnvironment)
                     .map(this::getEnvironment)
-                    .filter(Objects::nonNull)
-                    .findFirst().orElse(null);
+                    .filter(Objects::nonNull);
 
         }
 
-        return getEnvironment(p.getReferencedComponent("").getEnvironment());
+        return Stream.of(getEnvironment(p.getReferencedComponent("").getEnvironment())).filter(Objects::nonNull);
     }
 
     private Environment getEnvironment(String environment) {
