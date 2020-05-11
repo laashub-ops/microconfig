@@ -57,7 +57,9 @@ public class PlaceholderResolver implements RecursiveResolver {
         }
 
         private PlaceholderResolver currentResolverWithVisited(Placeholder placeholder, Property resolved) {
-            Placeholder resolvedPlaceholder = placeholder.isSelfReferenced() ? placeholder.withReferencedComponent(resolved.getDeclaringComponent()) : placeholder;
+            Placeholder resolvedPlaceholder = placeholder.isSelfReferenced() ?
+                    placeholder.withReferencedComponent(resolved.getDeclaringComponent()) : // todo can be another component
+                    placeholder;
             Set<Placeholder> updated = new LinkedHashSet<>(visited);
             if (updated.add(resolvedPlaceholder)) {
                 return withVisited(unmodifiableSet(updated));
